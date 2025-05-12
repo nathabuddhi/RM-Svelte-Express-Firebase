@@ -1,17 +1,36 @@
 const express = require("express");
 const cors = require("cors");
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getFirestore } = require("firebase-admin/firestore");
+const serviceAccount = require("./firebase-service-account.json");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/ping", (req, res) => {
-    res.json({ message: "Backend is alive!" });
+initializeApp({
+    credential: cert(serviceAccount),
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+const db = getFirestore();
+
+app.post("/api/check-role", async (req, res) => {
+    const { email, role } = req.body;
+    try {
+        const userDoc = await db.collection("Users").doc(email).get();
+        if (userDoc.exists && userDoc.data().role !== role) {
+            return res
+                .status(400)
+                .json({ error: "Email is already used with another role." });
+        }
+        return res.json({ ok: true });
+    } catch (err) {
+        console.error("Firestore error:", err);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+app.listen(process.env.PORT, () => {
+    console.log("Server running on http://localhost:" + process.env.PORT);
 });
