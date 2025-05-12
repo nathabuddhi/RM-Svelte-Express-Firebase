@@ -18,6 +18,7 @@
                 return;
             }
             const role = userDoc.data().role;
+            localStorage.setItem("userEmail", email);
             window.location.href = `/${role.toLowerCase()}`; // Redirect
         } catch (e) {
             error = (e as Error).message;

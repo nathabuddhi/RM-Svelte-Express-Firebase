@@ -17,6 +17,8 @@ const db = getFirestore();
 const productRoutes = require("./productRoutes");
 const cartRoutes = require("./cartRoutes");
 const checkoutRoutes = require("./checkoutRoutes");
+const orderRoutes = require("./orderRoutes");
+app.use("/api/orders", orderRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/products", productRoutes);
@@ -31,6 +33,21 @@ app.post("/api/check-role", async (req, res) => {
                 .json({ error: "Email is already used with another role." });
         }
         return res.json({ ok: true });
+    } catch (err) {
+        console.error("Firestore error:", err);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+app.get("/api/check-role/:email", async (req, res) => {
+    const { email } = req.params;
+    try {
+        const userDoc = await db.collection("Users").doc(email).get();
+        if (userDoc.exists) {
+            return res.json({ role: userDoc.data().role });
+        } else {
+            return res.status(404).json({ error: "User not found." });
+        }
     } catch (err) {
         console.error("Firestore error:", err);
         return res.status(500).json({ error: "Internal server error." });
