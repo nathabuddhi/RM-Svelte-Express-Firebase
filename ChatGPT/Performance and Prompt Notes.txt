@@ -1,0 +1,3 @@
+ChatGPT
+Task 1 - User Authentication - Code Non Functional (5/5 - Had to create my own routing function and API routes were switched.)
+Task 2 - Product Management - Functional (4/5 - Failed to implement images)

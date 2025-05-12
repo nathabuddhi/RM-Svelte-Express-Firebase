@@ -14,6 +14,8 @@ initializeApp({
 });
 
 const db = getFirestore();
+const productRoutes = require("./productRoutes");
+app.use("/api/products", productRoutes);
 
 app.post("/api/check-role", async (req, res) => {
     const { email, role } = req.body;

@@ -2,6 +2,7 @@
     import { Router, Route, Link } from "svelte-routing";
     import LoginPage from "./pages/login.svelte";
     import RegisterPage from "./pages/register.svelte";
+    import SellerProducts from "./pages/seller-products.svelte";
 </script>
 
 <main>
@@ -14,6 +15,9 @@
         </Route>
         <Route path="/register">
             <RegisterPage />
+        </Route>
+        <Route path="/seller">
+            <SellerProducts />
         </Route>
     </Router>
 </main>
