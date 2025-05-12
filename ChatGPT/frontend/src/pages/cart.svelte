@@ -5,6 +5,9 @@
     let email = "";
     let cart: any[] = [];
     let message = "";
+    let paymentMethod = "";
+    let shippingAddress = "";
+    let checkoutMessage = "";
 
     async function loadCart() {
         message = "";
@@ -41,7 +44,34 @@
     }
 
     async function checkout() {
-        alert("Checkout functionality coming soon!");
+        if (!paymentMethod || !shippingAddress) {
+            checkoutMessage =
+                "Please provide both payment method and shipping address.";
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `http://localhost:5000/api/checkout/${email}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ paymentMethod, shippingAddress }),
+                }
+            );
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Checkout failed.");
+            }
+
+            checkoutMessage = "Checkout successful!";
+            cart = [];
+            paymentMethod = "";
+            shippingAddress = "";
+        } catch (e) {
+            checkoutMessage = (e as Error).message;
+        }
     }
 
     onMount(() => {
@@ -101,10 +131,36 @@
     </div>
 {/each}
 
+
 {#if cart.length > 0}
-    <button on:click={checkout}>Checkout</button>
-{:else}
-    <p>Your cart is empty.</p>
+    <div>
+        <h3>Checkout</h3>
+        <label>
+            Payment Method:
+            <input
+                type="text"
+                bind:value={paymentMethod}
+                placeholder="e.g., Credit Card"
+            />
+        </label>
+        <label>
+            Shipping Address:
+            <textarea
+                bind:value={shippingAddress}
+                placeholder="Enter shipping address here"
+            ></textarea>
+        </label>
+        <button on:click={checkout}>Confirm Checkout</button>
+        {#if checkoutMessage}
+            <p
+                class={checkoutMessage.includes("success")
+                    ? "success"
+                    : "error"}
+            >
+                {checkoutMessage}
+            </p>
+        {/if}
+    </div>
 {/if}
 
 <style lang="scss">
