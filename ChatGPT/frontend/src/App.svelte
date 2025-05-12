@@ -3,6 +3,7 @@
     import LoginPage from "./pages/login.svelte";
     import RegisterPage from "./pages/register.svelte";
     import SellerProducts from "./pages/seller-products.svelte";
+    import BrowseProducts from "./pages/browse-products.svelte";
 </script>
 
 <main>
@@ -18,6 +19,9 @@
         </Route>
         <Route path="/seller">
             <SellerProducts />
+        </Route>
+        <Route path="/customer">
+            <BrowseProducts />
         </Route>
     </Router>
 </main>

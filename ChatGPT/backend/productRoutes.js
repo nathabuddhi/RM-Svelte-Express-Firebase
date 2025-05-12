@@ -33,7 +33,11 @@ router.post("/:email", async (req, res) => {
             .doc(email)
             .collection("Products")
             .doc(productId)
-            .set(data);
+            .set({
+                ...data,
+                productId,
+                owner: email,
+            });
         res.json({ message: "Product added", productId });
     } catch (err) {
         console.error(err);
@@ -72,6 +76,45 @@ router.delete("/:email/:productId", async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to delete product" });
+    }
+});
+
+// Public route: fetch all products with stock > 0, filtered by name (if provided)
+router.get("/search/:query", async (req, res) => {
+    const { query } = req.params;
+    console.log("Query:", query);
+    try {
+        const usersSnapshot = await db.collection("Users").get();
+        const products = [];
+
+        for (const userDoc of usersSnapshot.docs) {
+            const prodSnapshot = await db
+                .collection("Users")
+                .doc(userDoc.id)
+                .collection("Products")
+                .where("productStock", ">", 0)
+                .get();
+
+            for (const docSnap of prodSnapshot.docs) {
+                const data = docSnap.data();
+                if (
+                    !query ||
+                    data.productName.toLowerCase().includes(query.toLowerCase())
+                ) {
+                    products.push(data);
+                }
+            }
+        }
+        if (products.length === 0) {
+            return res
+                .status(404)
+                .json({ error: "No matching products found." });
+        }
+
+        res.json(products);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to search products." });
     }
 });
 
