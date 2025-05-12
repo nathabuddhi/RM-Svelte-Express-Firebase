@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { navigate } from "svelte-routing";
+    import { auth } from "../lib/firebase";
 
     let product: any = {};
     let loading = true;
@@ -37,8 +37,35 @@
     });
 
     // Placeholder Add to Cart functionality
-    function addToCart() {
-        alert("Add to Cart functionality is coming soon!");
+    async function addToCart() {
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("Please log in to add items to your cart.");
+            return;
+        }
+
+        const email = user.email;
+        const productId = product.productId;
+        const seller = product.owner || product.seller || "unknown"; // Ensure seller is tracked
+        const quantity = 1;
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/cart/${email}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId, quantity, seller }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            alert("Product added to cart!");
+        } catch (err) {
+            alert(
+                "Failed to add product to cart: " +
+                    (err instanceof Error ? err.message : "Unknown error")
+            );
+        }
     }
 </script>
 
