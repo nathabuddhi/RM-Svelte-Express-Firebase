@@ -4,6 +4,7 @@
     import RegisterPage from "./pages/register.svelte";
     import SellerProducts from "./pages/seller-products.svelte";
     import BrowseProducts from "./pages/browse-products.svelte";
+    import ProductDetail from "./pages/product-detail.svelte";
 </script>
 
 <main>
@@ -22,6 +23,9 @@
         </Route>
         <Route path="/customer">
             <BrowseProducts />
+        </Route>
+        <Route path="/product/:email/:productId">
+            <ProductDetail />
         </Route>
     </Router>
 </main>

@@ -8,13 +8,18 @@
 
     async function searchProducts() {
         error = "";
-        console.log("Searching for products with term:", searchTerm);
+        console.log("Searching for products with term: '" + searchTerm + "'");
         try {
             const res = await fetch(
-                `http://localhost:5000/api/products/search/${searchTerm}}`
+                `http://localhost:5000/api/products/search/${searchTerm === "" ? "ALL" : searchTerm}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
             );
             const data = await res.json();
-            console.log("Search results:", data);
             if (!res.ok) throw new Error(data.error);
             products = data;
         } catch (e) {
