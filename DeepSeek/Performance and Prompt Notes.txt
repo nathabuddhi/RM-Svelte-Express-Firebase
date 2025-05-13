@@ -1,4 +1,5 @@
 DeepSeek
 Task 1 - Functional (5/5)
 Task 2 - Non Functional (The API had authentication but was not called properly at all. Manual fixes were implemented to fetch the UID from firebase auth before sending it to a custom made firebase auth UID-checker in the backend.)
-Task 3 - 
+Task 3 - Functional (5/5)
+Task 4 - 

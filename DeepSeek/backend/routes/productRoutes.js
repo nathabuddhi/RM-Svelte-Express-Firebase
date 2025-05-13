@@ -6,6 +6,22 @@ const authMiddleware = require("./authMiddleware.js"); // import this
 
 const router = express.Router();
 
+router.get("/:productId", async (req, res) => {
+    try {
+        const productRef = db.collection("Products").doc(req.params.productId);
+        const doc = await productRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        res.json(doc.data());
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 router.use(authMiddleware); // all routes below require auth
 
 // Get seller's products

@@ -64,3 +64,4 @@ export const deleteProduct = async (
     });
     return handleResponse(response);
 };
+
