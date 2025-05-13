@@ -9,6 +9,7 @@
     import Search from "./routes/Search.svelte";
     import ProductDetail from "./routes/ProductDetail.svelte";
     import Cart from "./routes/Cart.svelte";
+    import Checkout from "./routes/Checkout.svelte";
 </script>
 
 <Router>
@@ -23,6 +24,9 @@
     </Route>
     <Route path="/cart">
         <Cart />
+    </Route>
+    <Route path="/checkout">
+        <Checkout />
     </Route>
     <Route path="/seller-dashboard">
         <ProductManagement />

@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
 const searchRoutes = require("./routes/searchRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/cart", cartRoutes);
 
+app.use("/api/orders", orderRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
     res.json({ status: "Server is running" });

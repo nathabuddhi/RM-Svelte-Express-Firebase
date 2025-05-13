@@ -6,6 +6,7 @@
         deleteCartItem,
         type CartItem,
     } from "../services/cartService";
+    import { navigate } from "svelte-routing";
 
     let cart: CartItem[] = [];
     let loading = true;
@@ -56,7 +57,11 @@
     };
 
     const checkout = () => {
-        alert("Checkout functionality coming next!");
+        if (cart.length === 0) {
+            error = "Your cart is empty";
+            return;
+        }
+        navigate("/checkout");
     };
 </script>
 
@@ -98,7 +103,13 @@
                                 max={item.product.productStock}
                                 bind:value={item.quantity}
                                 on:change={(e) =>
-                                    updateQuantity(item, +((e.target as HTMLInputElement)?.value || item.quantity))}
+                                    updateQuantity(
+                                        item,
+                                        +(
+                                            (e.target as HTMLInputElement)
+                                                ?.value || item.quantity
+                                        )
+                                    )}
                             />
                         </td>
                         <td
