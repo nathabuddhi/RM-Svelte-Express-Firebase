@@ -56,7 +56,8 @@
             }
 
             product = await response.json();
-            currentImageIndex = product?.productImages?.length > 0 ? 0 : -1;
+            currentImageIndex =
+                (product?.productImages ?? []).length > 0 ? 0 : -1;
         } catch (err) {
             error = err instanceof Error ? err.message : "Fetch error";
             console.error("Fetch error:", err);

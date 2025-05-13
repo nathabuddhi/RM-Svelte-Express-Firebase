@@ -69,7 +69,7 @@
 
             products = await response.json();
         } catch (err) {
-            error = err.message || "An error occurred while fetching products";
+            error = err instanceof Error ? err.message : "An error occurred while fetching products";
             console.error("Fetch error:", err);
         } finally {
             loading = false;
@@ -132,7 +132,7 @@
                 : "Product created successfully";
             await fetchProducts();
         } catch (err) {
-            error = err.message || "An error occurred";
+            error = err instanceof Error ? err.message : "An error occurred";
             console.error("Submit error:", err);
         }
     }
@@ -162,7 +162,7 @@
             success = "Product deleted successfully";
             await fetchProducts();
         } catch (err) {
-            error = err.message || "An error occurred";
+            error = err instanceof Error ? err.message : "An error occurred";
             console.error("Delete error:", err);
         }
     }

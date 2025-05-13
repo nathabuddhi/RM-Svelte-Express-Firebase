@@ -2,3 +2,6 @@ Claude
 Task 1 - Functional (5/5)
 Task 2 - Code Non Functional (Made own changes including how authentication and authorization works.)
 Task 3 - Functional (5/5)
+Task 4 - Functional (5/5)
+Task 5 - Functional (5/5) -> This was generated on Task 4.
+Task 6 - 

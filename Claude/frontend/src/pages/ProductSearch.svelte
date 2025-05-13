@@ -46,7 +46,7 @@
             products = await response.json();
             filteredProducts = [...products];
         } catch (err) {
-            error = err.message || "An error occurred while fetching products";
+            error = (err instanceof Error ? err.message : "An error occurred while fetching products");
             console.error("Fetch error:", err);
         } finally {
             loading = false;
@@ -79,7 +79,7 @@
                 error = `No products found matching "${searchQuery}"`;
             }
         } catch (err) {
-            error = err.message || "An error occurred while searching products";
+            error = (err instanceof Error ? err.message : "An error occurred while searching products");
             console.error("Search error:", err);
         } finally {
             searching = false;

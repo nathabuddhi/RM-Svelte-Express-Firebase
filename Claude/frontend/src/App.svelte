@@ -6,6 +6,7 @@
     import SellerDashboard from "./pages/SellerDashboard.svelte";
     import ProductSearch from "./pages/ProductSearch.svelte";
     import ProductDetail from "./pages/ProductDetail.svelte";
+    import Cart from "./pages/Cart.svelte";
 
     export let url = "";
 </script>
@@ -20,5 +21,6 @@
             ><ProductDetail id={params.id} /></Route
         >
         <Route path="/seller/dashboard"><SellerDashboard /></Route>
+        <Route path="/cart"><Cart /></Route>
     </div>
 </Router>

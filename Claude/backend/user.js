@@ -3,7 +3,7 @@ const admin = require("firebase-admin");
 const router = express.Router();
 
 const db = admin.firestore();
-const authMiddleware = require("./authMiddleware");
+const { authMiddleware, validateFirebaseIdToken } = require("./authMiddleware");
 
 // Authenticated route to get user role
 router.get("/getrole", authMiddleware, async (req, res) => {
