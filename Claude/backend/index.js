@@ -14,7 +14,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
 // Initialize Firebase Admin SDK
 // You'll need to create a service account key file in the Firebase console
 admin.initializeApp({
@@ -23,6 +22,11 @@ admin.initializeApp({
 
 // Initialize Firestore
 const db = admin.firestore();
+const productRoutes = require("./product");
+const userRoutes = require("./user");
+app.use("/api/users", userRoutes);
+
+app.use("/api/products", productRoutes);
 
 // Authentication middleware
 const authenticateUser = async (req, res, next) => {

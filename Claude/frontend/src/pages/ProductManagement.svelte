@@ -1,6 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { authStore } from "../stores/authStore";
+
+    import { onAuthStateChanged } from "firebase/auth";
+    import { auth } from "../lib/firebase"; // adjust if path differs
+    import { navigate } from "svelte-routing"; // or $app/navigation if you're using SvelteKit
 
     // Product interface
     interface Product {
@@ -13,36 +16,40 @@
         sellerId: string;
     }
 
+    // Firebase Auth token and UID
+    let token: string = "";
+    let uid: string = "";
+
     // Form data
-    let productName: string = "";
-    let productDescription: string = "";
+    let productName = "";
+    let productDescription = "";
     let productImages: string[] = [];
-    let productPrice: string = "";
-    let productStock: string = "";
-    let imageUrl: string = "";
+    let productPrice = "";
+    let productStock = "";
+    let imageUrl = "";
 
-    // State management
+    // State
     let products: Product[] = [];
-    let loading: boolean = true;
-    let error: string = "";
-    let success: string = "";
-    let editMode: boolean = false;
-    let currentProductId: string = "";
+    let loading = true;
+    let error = "";
+    let success = "";
+    let editMode = false;
+    let currentProductId = "";
 
-    // Auth token from store
-    let token: string;
-    authStore.subscribe((auth) => {
-        token = auth.token;
+    const API_URL = "http://localhost:5000/api/products";
+
+    onMount(() => {
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                navigate("/login");
+                return;
+            }
+
+            uid = user.uid;
+            token = await user.getIdToken();
+            await fetchProducts();
+        });
     });
-
-    // API base URL
-    const API_URL = "/api/products";
-
-    // Fetch all products on component mount
-    onMount(async () => {
-        await fetchProducts();
-    });
-
     // Fetch products from API
     async function fetchProducts() {
         loading = true;
@@ -377,7 +384,7 @@
     }
 
     form {
-        background-color: #f9f9f9;
+        background-color: black;
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin-bottom: 2rem;

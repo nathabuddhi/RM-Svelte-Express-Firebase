@@ -1,2 +1,3 @@
 Claude
 Task 1 - Functional (5/5)
+Task 2 - Code Non Functional (Made own changes including how authentication and authorization works.)

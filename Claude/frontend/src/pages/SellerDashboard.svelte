@@ -1,25 +1,43 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { authStore, isSeller } from "../stores/authStore";
     import ProductManagement from "./ProductManagement.svelte";
     import { navigate } from "svelte-routing";
+    import { onAuthStateChanged } from "firebase/auth";
+    import { auth } from "../lib/firebase";
 
     let isUserSeller = false;
 
     onMount(() => {
-        // Subscribe to auth changes to check user role
-        const unsubscribe = authStore.subscribe((state) => {
-            if (!state.isAuthenticated) {
-                // Redirect to login if not authenticated
-                // navigate("/login");
-                // return;
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                navigate("/login");
+                return;
             }
 
-            isUserSeller = state.user?.role === "Seller";
+            const idToken = await user.getIdToken();
 
-            if (!isUserSeller) {
-                // Redirect to home if not a seller
-                // navigate("/");
+            try {
+                const response = await fetch(
+                    "http://localhost:5000/api/users/getrole",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${idToken}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) throw new Error("Failed to get user profile");
+
+                const data = await response.json();
+
+                isUserSeller = data.role === "Seller";
+
+                if (!isUserSeller) {
+                    navigate("/");
+                }
+            } catch (err) {
+                console.error("Error fetching user profile:", err);
+                navigate("/login");
             }
         });
 
