@@ -2,19 +2,14 @@ const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const { check, validationResult } = require("express-validator");
 const { db } = require("../firebase-admin");
+const authMiddleware = require("./authMiddleware.js"); // import this
 
 const router = express.Router();
 
-// Middleware to verify seller
-const verifySeller = async (req, res, next) => {
-    if (!req.user || req.user.role !== "Seller") {
-        return res.status(403).json({ error: "Unauthorized" });
-    }
-    next();
-};
+router.use(authMiddleware); // all routes below require auth
 
 // Get seller's products
-router.get("", verifySeller, async (req, res) => {
+router.get("", async (req, res) => {
     try {
         const productsRef = db.collection("Products");
         const snapshot = await productsRef
@@ -36,7 +31,6 @@ router.get("", verifySeller, async (req, res) => {
 // Create new product
 router.post(
     "",
-    verifySeller,
     [
         check("productName", "Product name is required").not().isEmpty(),
         check("productPrice", "Valid price is required").isFloat({ min: 0 }),
@@ -70,7 +64,7 @@ router.post(
 );
 
 // Update product
-router.put("/:productId", verifySeller, async (req, res) => {
+router.put("/:productId", async (req, res) => {
     try {
         const productRef = db.collection("Products").doc(req.params.productId);
         const doc = await productRef.get();
@@ -103,7 +97,7 @@ router.put("/:productId", verifySeller, async (req, res) => {
 });
 
 // Delete product
-router.delete("/:productId", verifySeller, async (req, res) => {
+router.delete("/:productId", async (req, res) => {
     try {
         const productRef = db.collection("Products").doc(req.params.productId);
         const doc = await productRef.get();

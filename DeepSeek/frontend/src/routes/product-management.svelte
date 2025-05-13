@@ -7,6 +7,8 @@
         deleteProduct,
     } from "../services/productService";
     import type { Product, ProductFormData } from "../types/product";
+    import { auth } from "../firebase";
+    import { onAuthStateChanged } from "firebase/auth";
 
     let products: Product[] = [];
     let loading = true;
@@ -26,8 +28,15 @@
 
     let newImage = "";
 
-    onMount(async () => {
-        await loadProducts();
+    onMount(() => {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadProducts();
+            } else {
+                error = "You must be logged in";
+                loading = false;
+            }
+        });
     });
 
     const loadProducts = async () => {
