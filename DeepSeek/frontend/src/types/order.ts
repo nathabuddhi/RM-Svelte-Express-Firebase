@@ -11,7 +11,7 @@ export interface Order {
     items: OrderItem[];
     paymentMethod: string;
     shippingAddress: string;
-    status: string;
+    status: "Pending" | "Accepted" | "Shipped" | "Completed";
     timestamp: Date;
     total: number;
 }
@@ -20,3 +20,5 @@ export interface CheckoutFormData {
     paymentMethod: string;
     shippingAddress: string;
 }
+
+export type OrderStatus = Order["status"];

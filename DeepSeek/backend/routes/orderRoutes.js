@@ -100,15 +100,38 @@ router.post("/checkout", async (req, res) => {
     }
 });
 
-// Get user orders
-router.get("/", async (req, res) => {
-    try {
-        const ordersRef = db
-            .collection("Orders")
-            .where("customer", "==", req.user.email)
-            .orderBy("timestamp", "desc");
+const ORDER_STATUS = {
+    PENDING: "Pending",
+    ACCEPTED: "Accepted",
+    SHIPPED: "Shipped",
+    COMPLETED: "Completed",
+};
 
-        const snapshot = await ordersRef.get();
+// Get orders for current user (customer or seller)
+router.get("", async (req, res) => {
+    try {
+        let ordersRef = db.collection("Orders");
+
+        if (req.user.role === "Seller") {
+            // For sellers, get all orders that contain their products
+            const productsRef = db
+                .collection("Products")
+                .where("sellerId", "==", req.user.uid);
+
+            const productsSnapshot = await productsRef.get();
+            const productIds = productsSnapshot.docs.map((doc) => doc.id);
+
+            ordersRef = ordersRef.where(
+                "items",
+                "array-contains-any",
+                productIds
+            );
+        } else {
+            // For customers, get their own orders
+            ordersRef = ordersRef.where("customer", "==", req.user.email);
+        }
+
+        const snapshot = await ordersRef.orderBy("timestamp", "desc").get();
         const orders = [];
         snapshot.forEach((doc) => orders.push(doc.data()));
 
@@ -116,6 +139,97 @@ router.get("/", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to fetch orders" });
+    }
+});
+
+// Update order status (for sellers)
+router.put("/:orderId/status", async (req, res) => {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    const validStatuses = Object.values(ORDER_STATUS);
+
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+    }
+
+    try {
+        const orderRef = db.collection("Orders").doc(orderId);
+        const orderDoc = await orderRef.get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+
+        // Verify seller owns at least one product in the order
+        if (req.user.role === "Seller") {
+            const items = orderDoc.data().items;
+            const productIds = items.map((item) => item.productId);
+
+            const productsRef = db
+                .collection("Products")
+                .where("sellerId", "==", req.user.uid)
+                .where(
+                    admin.firestore.FieldPath.documentId(),
+                    "in",
+                    productIds
+                );
+
+            const productsSnapshot = await productsRef.get();
+
+            if (productsSnapshot.empty) {
+                return res
+                    .status(403)
+                    .json({ error: "Not authorized to update this order" });
+            }
+        }
+
+        await orderRef.update({ status });
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to update order status" });
+    }
+});
+
+// Customer confirms order received
+router.put("/:orderId/complete", async (req, res) => {
+    const { orderId } = req.params;
+
+    try {
+        if (req.user.role !== "Customer") {
+            return res
+                .status(403)
+                .json({ error: "Only customers can complete orders" });
+        }
+
+        const orderRef = db.collection("Orders").doc(orderId);
+        const orderDoc = await orderRef.get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+
+        const order = orderDoc.data();
+
+        // Verify order belongs to this customer
+        if (order.customer !== req.user.email) {
+            return res
+                .status(403)
+                .json({ error: "Not authorized to complete this order" });
+        }
+
+        // Verify order is in Shipped status
+        if (order.status !== ORDER_STATUS.SHIPPED) {
+            return res
+                .status(400)
+                .json({ error: "Order must be shipped before completing" });
+        }
+
+        await orderRef.update({ status: ORDER_STATUS.COMPLETED });
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to complete order" });
     }
 });
 

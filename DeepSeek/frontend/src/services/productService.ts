@@ -1,5 +1,6 @@
 import { auth } from "../firebase";
 import type { Product, ProductFormData } from "../types/product";
+import { getToken } from "./cartService";
 
 const API_BASE_URL = "http://localhost:5000/api/products";
 
@@ -12,7 +13,7 @@ async function handleResponse(response: Response) {
 }
 
 export const getSellerProducts = async (): Promise<Product[]> => {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getToken();
     const response = await fetch(API_BASE_URL, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -24,7 +25,7 @@ export const getSellerProducts = async (): Promise<Product[]> => {
 export const createProduct = async (
     productData: ProductFormData
 ): Promise<Product> => {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getToken();
     const response = await fetch(API_BASE_URL, {
         method: "POST",
         headers: {
@@ -40,7 +41,7 @@ export const updateProduct = async (
     productId: string,
     productData: Partial<ProductFormData>
 ): Promise<Product> => {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getToken();
     const response = await fetch(`${API_BASE_URL}/${productId}`, {
         method: "PUT",
         headers: {
@@ -55,7 +56,7 @@ export const updateProduct = async (
 export const deleteProduct = async (
     productId: string
 ): Promise<{ success: boolean }> => {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getToken();
     const response = await fetch(`${API_BASE_URL}/${productId}`, {
         method: "DELETE",
         headers: {
@@ -64,4 +65,3 @@ export const deleteProduct = async (
     });
     return handleResponse(response);
 };
-

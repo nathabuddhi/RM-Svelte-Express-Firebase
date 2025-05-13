@@ -10,7 +10,7 @@ export interface CartItem {
 
 const API_BASE_URL = "http://localhost:5000/api/cart";
 
-const getToken = async (): Promise<string> => {
+export const getToken = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             unsubscribe(); // prevent multiple calls

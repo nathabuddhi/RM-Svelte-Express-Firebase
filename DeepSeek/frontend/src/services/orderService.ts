@@ -1,7 +1,8 @@
 import { auth } from "../firebase";
-import type { Order, CheckoutFormData } from "../types/order";
+import type { Order, CheckoutFormData, OrderStatus } from "../types/order";
+import { getToken } from "./cartService";
 
-const API_BASE_URL = "/api/orders";
+const API_BASE_URL = "http://localhost:5000/api/orders";
 
 async function handleResponse(response: Response) {
     if (!response.ok) {
@@ -21,13 +22,13 @@ export const submitOrder = async (
         }
 
         // Get fresh ID token
-        const idToken = await auth.currentUser.getIdToken(true);
+        const token = await getToken();
 
         const response = await fetch(`${API_BASE_URL}/checkout`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
+                Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(formData),
         });
@@ -45,8 +46,45 @@ export const submitOrder = async (
 };
 
 export const getUserOrders = async (): Promise<Order[]> => {
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getToken();
     const response = await fetch(API_BASE_URL, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getOrders = async (): Promise<Order[]> => {
+    const token = await getToken();
+    const response = await fetch(API_BASE_URL, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const updateOrderStatus = async (
+    orderId: string,
+    status: OrderStatus
+): Promise<void> => {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/${orderId}/status`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+    });
+    return handleResponse(response);
+};
+
+export const completeOrder = async (orderId: string): Promise<void> => {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/${orderId}/complete`, {
+        method: "PUT",
         headers: {
             Authorization: `Bearer ${token}`,
         },
