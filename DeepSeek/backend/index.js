@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes.js");
+const productRoutes = require("./routes/productRoutes.js");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
