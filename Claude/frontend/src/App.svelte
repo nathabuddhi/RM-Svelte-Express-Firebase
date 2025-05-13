@@ -4,6 +4,8 @@
     import Register from "./pages/Register.svelte";
     import Login from "./pages/Login.svelte";
     import SellerDashboard from "./pages/SellerDashboard.svelte";
+    import ProductSearch from "./pages/ProductSearch.svelte";
+    import ProductDetail from "./pages/ProductDetail.svelte";
 
     export let url = "";
 </script>
@@ -13,7 +15,10 @@
         <Route path="/register"><Register /></Route>
         <Route path="/login"><Login /></Route>
         <!-- Add placeholder routes for now -->
-        <Route path="/customer/dashboard"><h1>Customer</h1></Route>
+        <Route path="/customer/dashboard"><ProductSearch /></Route>
+        <Route path="/product/:id" let:params
+            ><ProductDetail id={params.id} /></Route
+        >
         <Route path="/seller/dashboard"><SellerDashboard /></Route>
     </div>
 </Router>

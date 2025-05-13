@@ -24,8 +24,9 @@ admin.initializeApp({
 const db = admin.firestore();
 const productRoutes = require("./product");
 const userRoutes = require("./user");
+const searchRoutes = require("./productSearch");
 app.use("/api/users", userRoutes);
-
+app.use("/api/search", searchRoutes);
 app.use("/api/products", productRoutes);
 
 // Authentication middleware
