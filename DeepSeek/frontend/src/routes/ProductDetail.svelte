@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type { Product } from "../types/product";
+    import { addOrUpdateCartItem } from "../services/cartService";
+    import { navigate } from "svelte-routing";
 
     let id: string; // Product ID from route param
 
@@ -25,9 +27,15 @@
         }
     });
 
-    const addToCart = () => {
-        // Implement cart functionality here
-        alert(`Added ${quantity} of ${product?.productName} to cart`);
+    const addToCart = async () => {
+        if (!product || quantity < 1) return;
+
+        try {
+            await addOrUpdateCartItem(product.productId, quantity);
+            navigate("/cart");
+        } catch (err) {
+            alert(err);
+        }
     };
 </script>
 

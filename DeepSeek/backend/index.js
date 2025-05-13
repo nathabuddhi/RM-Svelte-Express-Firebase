@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
 const searchRoutes = require("./routes/searchRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/cart", cartRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

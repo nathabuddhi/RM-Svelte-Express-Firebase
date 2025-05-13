@@ -2,4 +2,4 @@ DeepSeek
 Task 1 - Functional (5/5)
 Task 2 - Non Functional (The API had authentication but was not called properly at all. Manual fixes were implemented to fetch the UID from firebase auth before sending it to a custom made firebase auth UID-checker in the backend.)
 Task 3 - Functional (5/5)
-Task 4 - 
+Task 4 - Unresponsive model. It is assumed that DeepSeek denies some prompts despite multiple retries and modifications, since everytime the prompt was sent the model would return "The server is busy. Please try again later.", but would work for other prompts right after, and fail again with the same error message when given the original Task 4 prompt. Manual work was done.
