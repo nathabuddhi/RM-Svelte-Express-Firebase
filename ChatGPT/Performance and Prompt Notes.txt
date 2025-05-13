@@ -1,3 +1,7 @@
 ChatGPT
 Task 1 - User Authentication - Code Non Functional (5/5 - Had to create my own routing function and API routes were switched.)
 Task 2 - Product Management - Functional (4/5 - Failed to implement images)
+Task 3 - Product Search - Code Non Functional (Had to modify my own product search and product details page)
+Task 4 - Shopping Cart System - Functional (5/5)
+Task 5 - Checkout System - Functional (5/5)
+Task 6 - Order management - Semi Functional (Seller Page did not work, Customer Page worked)
