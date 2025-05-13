@@ -4,4 +4,4 @@ Task 2 - Code Non Functional (Made own changes including how authentication and 
 Task 3 - Functional (5/5)
 Task 4 - Functional (5/5)
 Task 5 - Functional (5/5) -> This was generated on Task 4.
-Task 6 - 
+Task 6 - Code Non Functional -> Code relies on authStore that does not exist, uses wrong API calls, does not use typescript, and uses unknown components. 

@@ -254,6 +254,14 @@ router.delete("/:productId", validateFirebaseIdToken, async (req, res) => {
 });
 
 // Checkout cart
+// server/routes/orders.js
+
+const express = require("express");
+const router = express.Router();
+const admin = require("firebase-admin");
+const { validateFirebaseIdToken } = require("../middleware/auth");
+const { v4: uuidv4 } = require("uuid");
+
 router.post("/checkout", validateFirebaseIdToken, async (req, res) => {
     try {
         const userId = req.user.uid;
@@ -269,10 +277,14 @@ router.post("/checkout", validateFirebaseIdToken, async (req, res) => {
 
         const userData = userDoc.data();
         const cart = userData.cart || [];
+        const userEmail = userData.email;
 
         if (cart.length === 0) {
             return res.status(400).json({ error: "Cart is empty" });
         }
+
+        const orderItems = [];
+        const orderIds = [];
 
         // Transaction to handle checkout
         await db.runTransaction(async (transaction) => {
@@ -303,25 +315,57 @@ router.post("/checkout", validateFirebaseIdToken, async (req, res) => {
                 }
             }
 
-            // Update product stock
-            productDocs.forEach((doc, index) => {
-                if (doc.exists) {
-                    const product = doc.data();
-                    const item = cart[index];
-                    transaction.update(productRefs[index], {
-                        stock: product.stock - item.quantity,
-                    });
-                }
-            });
+            // Group cart items by seller
+            const sellerItems = {};
+            for (let i = 0; i < cart.length; i++) {
+                const item = cart[i];
+                const productDoc = productDocs[i];
+                const product = productDoc.data();
 
-            // Create order (this would be handled in the checkout process, but we'll add basic structure)
-            const orderRef = db.collection("Orders").doc();
-            transaction.set(orderRef, {
-                userId,
-                items: cart,
-                status: "pending",
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+                if (!sellerItems[product.sellerId]) {
+                    sellerItems[product.sellerId] = [];
+                }
+
+                sellerItems[product.sellerId].push({
+                    ...item,
+                    productName: product.productName || product.name,
+                    price: product.price,
+                    sellerId: product.sellerId,
+                });
+
+                // Update product stock
+                transaction.update(productRefs[i], {
+                    stock: product.stock - item.quantity,
+                });
+            }
+
+            // Create order for each seller
+            for (const sellerId in sellerItems) {
+                const orderId = uuidv4();
+                const orderRef = db.collection("Orders").doc(orderId);
+
+                const orderData = {
+                    orderId,
+                    userId,
+                    userEmail,
+                    sellerId,
+                    items: sellerItems[sellerId],
+                    status: "pending",
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    statusHistory: [
+                        {
+                            status: "pending",
+                            timestamp:
+                                admin.firestore.FieldValue.serverTimestamp(),
+                        },
+                    ],
+                };
+
+                transaction.set(orderRef, orderData);
+                orderItems.push(...sellerItems[sellerId]);
+                orderIds.push(orderId);
+            }
 
             // Clear cart
             transaction.update(userRef, {
@@ -329,7 +373,10 @@ router.post("/checkout", validateFirebaseIdToken, async (req, res) => {
             });
         });
 
-        res.status(200).json({ message: "Checkout successful" });
+        res.status(200).json({
+            message: "Checkout successful",
+            orderIds,
+        });
     } catch (error) {
         console.error("Error during checkout:", error);
         res.status(500).json({
@@ -337,5 +384,135 @@ router.post("/checkout", validateFirebaseIdToken, async (req, res) => {
         });
     }
 });
+
+// Get orders for customer
+router.get("/customer-orders", validateFirebaseIdToken, async (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const db = admin.firestore();
+
+        const ordersSnapshot = await db
+            .collection("Orders")
+            .where("userId", "==", userId)
+            .orderBy("createdAt", "desc")
+            .get();
+
+        const orders = [];
+        ordersSnapshot.forEach((doc) => {
+            orders.push({
+                id: doc.id,
+                ...doc.data(),
+            });
+        });
+
+        res.status(200).json({ orders });
+    } catch (error) {
+        console.error("Error fetching customer orders:", error);
+        res.status(500).json({
+            error: error.message || "Failed to fetch orders",
+        });
+    }
+});
+
+// Get orders for seller
+router.get("/seller-orders", validateFirebaseIdToken, async (req, res) => {
+    try {
+        const sellerId = req.user.uid;
+        const db = admin.firestore();
+
+        const ordersSnapshot = await db
+            .collection("Orders")
+            .where("sellerId", "==", sellerId)
+            .orderBy("createdAt", "desc")
+            .get();
+
+        const orders = [];
+        ordersSnapshot.forEach((doc) => {
+            orders.push({
+                id: doc.id,
+                ...doc.data(),
+            });
+        });
+
+        res.status(200).json({ orders });
+    } catch (error) {
+        console.error("Error fetching seller orders:", error);
+        res.status(500).json({
+            error: error.message || "Failed to fetch orders",
+        });
+    }
+});
+
+// Update order status (for sellers to accept/ship orders)
+router.put(
+    "/update-status/:orderId",
+    validateFirebaseIdToken,
+    async (req, res) => {
+        try {
+            const { orderId } = req.params;
+            const { status } = req.body;
+            const userId = req.user.uid;
+            const db = admin.firestore();
+
+            if (
+                !["pending", "accepted", "shipped", "completed"].includes(
+                    status
+                )
+            ) {
+                return res.status(400).json({ error: "Invalid status" });
+            }
+
+            const orderRef = db.collection("Orders").doc(orderId);
+            const orderDoc = await orderRef.get();
+
+            if (!orderDoc.exists) {
+                return res.status(404).json({ error: "Order not found" });
+            }
+
+            const orderData = orderDoc.data();
+
+            // Check if user is authorized (seller for accept/ship, customer for complete)
+            if (
+                (["accepted", "shipped"].includes(status) &&
+                    orderData.sellerId !== userId) ||
+                (status === "completed" && orderData.userId !== userId)
+            ) {
+                return res
+                    .status(403)
+                    .json({ error: "Unauthorized to update this order" });
+            }
+
+            // Validate status transition
+            if (
+                (status === "accepted" && orderData.status !== "pending") ||
+                (status === "shipped" && orderData.status !== "accepted") ||
+                (status === "completed" && orderData.status !== "shipped")
+            ) {
+                return res.status(400).json({
+                    error: `Cannot change status from ${orderData.status} to ${status}`,
+                });
+            }
+
+            // Update order status
+            await orderRef.update({
+                status,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                statusHistory: admin.firestore.FieldValue.arrayUnion({
+                    status,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                }),
+            });
+
+            res.status(200).json({
+                message: "Order status updated successfully",
+            });
+        } catch (error) {
+            console.error("Error updating order status:", error);
+            res.status(500).json({
+                error: error.message || "Failed to update order status",
+            });
+        }
+    }
+);
 
 module.exports = router;
